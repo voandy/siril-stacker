@@ -1,6 +1,34 @@
 #!/usr/bin/env bash
-python -m venv venv
-. venv/Scripts/activate
-pip install --upgrade pip
-pip install -r requirements.txt
-python astro_sort.py
+
+ve() {
+    local py=${1:-python3.10}
+    local venv="${2:-./.venv}"
+
+    local bin="${venv}/bin/activate"
+
+	if [ -z "${VIRTUAL_ENV}" ]; then
+        if [ ! -d ${venv} ]; then
+            echo "Creating and activating virtual environment ${venv}"
+            ${py} -m venv ${venv} --system-site-package
+            echo "export PYTHON=${py}" >> ${bin}
+            source ${bin}
+            echo "Upgrading pip"
+            ${py} -m pip install --upgrade pip
+            ${py} -m pip install -r requirements.txt
+            ${py} main.py
+        else
+            echo "Virtual environment ${venv} already exists, activating..."
+            source ${bin}
+            ${py} -m pip install --upgrade pip
+            ${py} -m pip install -r requirements.txt
+            ${py} main.py
+        fi
+    else
+        echo "Already in a virtual environment!"
+        ${py} -m pip install --upgrade pip
+        ${py} -m pip install -r requirements.txt
+        ${py} main.py
+    fi
+}
+
+ve
