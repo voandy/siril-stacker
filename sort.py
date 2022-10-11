@@ -8,17 +8,16 @@ class ValidationException(Exception):
 
 
 def symlink_files(input_dir, sorted_dir):
-
     for subdir, _, files in os.walk(input_dir):
         for file in files:
             if file.endswith('.fits'):
                 with fits.open(os.path.join(subdir, file)) as fits_file:
                     try:
-                        filter = fits_file[0].header['FILTER']
+                        filter_type = fits_file[0].header['FILTER']
                         image_type = fits_file[0].header['IMAGETYP']
                         src = os.path.join(subdir, file)
-                        dst = os.path.join(sorted_dir, filter, image_type, file)
-                        Path(os.path.join(sorted_dir, filter, image_type)).mkdir(parents=True, exist_ok=True)
+                        dst = os.path.join(sorted_dir, filter_type, image_type, file)
+                        Path(os.path.join(sorted_dir, filter_type, image_type)).mkdir(parents=True, exist_ok=True)
                         os.symlink(src, dst)
                     except FileExistsError:
                         print('Destination fits file already exists. Skipping fits file: ' + os.path.join(subdir, file))
@@ -48,7 +47,7 @@ def verify_lights(lights_dir):
                         exposure_times.append(exposure_time)
                         ras.append(ra)
                         decs.append(dec)
-                    except KeyError:
+                    except KeyError as e:
                         print('Exposure time, RA or DEC no present in file: ' + os.path.join(subdir, file))
                         raise ValidationException(e)
             else:
