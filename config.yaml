@@ -1,4 +1,5 @@
 directories:
-  working_directory: C:\Users\User\Desktop\siril
+  input_directory: C:\Users\User\Desktop\input
+  output_directory: C:\Users\User\Desktop\output
   biases_directory: Z:\Photos\Astro\Library\QHY294M\11MP\1600_Gain_30_Offset_-10C\BIASES
   darks_directory: Z:\Photos\Astro\Library\QHY294M\11MP\1600_Gain_30_Offset_-10C\DARKS

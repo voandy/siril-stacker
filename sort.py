@@ -3,8 +3,13 @@ from pathlib import Path
 from astropy.io import fits
 
 
-def symlink_files(work_dir, sorted_dir):
-    for subdir, _, files in os.walk(work_dir):
+class ValidationException(Exception):
+    pass
+
+
+def symlink_files(input_dir, sorted_dir):
+
+    for subdir, _, files in os.walk(input_dir):
         for file in files:
             if file.endswith('.fits'):
                 with fits.open(os.path.join(subdir, file)) as fits_file:
@@ -45,20 +50,23 @@ def verify_lights(lights_dir):
                         decs.append(dec)
                     except KeyError:
                         print('Exposure time, RA or DEC no present in file: ' + os.path.join(subdir, file))
-                        print('Exiting script.')
-                        exit(1)
+                        raise ValidationException(e)
             else:
                 continue
 
-    assert all(exposure_time == exposure_times[0] for exposure_time in exposure_times), 'Not all exposure times are equal. Exiting script.'
-    assert max(ras) - min(ras) < 3, 'Right Ascention range greater than 3 degrees. Exiting script'
-    assert max(decs) - min(decs) < 3, 'Declination range greater than 3 degrees. Exiting script'
+    try:
+        assert all(exposure_time == exposure_times[0] for exposure_time in exposure_times), 'Not all exposure times are equal. Exiting script.'
+        assert max(ras) - min(ras) < 3, 'Right Ascention range greater than 3 degrees. Exiting script'
+        assert max(decs) - min(decs) < 3, 'Declination range greater than 3 degrees. Exiting script'
+    except AssertionError as e:
+        print('Validation failed.')
+        raise ValidationException(e)
 
     return exposure_times[0]
 
 
 def symlink_master_biases_and_darks(image_type_dir, master_bias_dir, darks_dir, exposure_time):
-    process_path = os.path.join(image_type_dir, 'process')
+    process_path = os.path.join(image_type_dir, 'PROCESS')
     master_bias_path = os.path.join(master_bias_dir, 'bias_stacked.fit')
     master_dark_path = os.path.join(darks_dir, str(exposure_time) + 'S', 'dark_stacked.fit')
 
