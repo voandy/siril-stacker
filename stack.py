@@ -23,7 +23,7 @@ def light(app, light_dir, process_dir, output_dir, image_type):
     app.Execute('cd ' + process_dir)
     app.Execute('preprocess light -dark=dark_stacked -flat=pp_flat_stacked')
     app.Execute('register pp_light')
-    app.Execute('stack r_pp_light rej 3 3 -norm=addscale -output_norm -out=' + output_dir + '\\STACKED\\' + image_type)
+    app.Execute('stack r_pp_light rej linear 5 5 -norm=addscale -output_norm -out=' + output_dir + '\\STACKED\\' + image_type)
     app.Execute('close')
 
     

@@ -32,21 +32,14 @@ def symlink_files(input_dir, sorted_dir):
 
 def verify_lights(lights_dir):
     exposure_times = []
-    ras = []
-    decs = []
 
     for subdir, _, files in os.walk(lights_dir):
         for file in files:
-            if file.endswith('.fits'):
+            if file.endswith('.fits') and 'BAD' not in file:
                 with fits.open(os.path.join(subdir, file)) as fits_file:
                     try:
                         exposure_time = int(fits_file[0].header['EXPTIME'])
-                        ra = float(fits_file[0].header['RA'])
-                        dec = float(fits_file[0].header['DEC'])
-
                         exposure_times.append(exposure_time)
-                        ras.append(ra)
-                        decs.append(dec)
                     except KeyError as e:
                         print('Exposure time, RA or DEC no present in file: ' + os.path.join(subdir, file))
                         raise ValidationException(e)
@@ -55,8 +48,6 @@ def verify_lights(lights_dir):
 
     try:
         assert all(exposure_time == exposure_times[0] for exposure_time in exposure_times), 'Not all exposure times are equal. Exiting script.'
-        assert max(ras) - min(ras) < 3, 'Right Ascention range greater than 3 degrees. Exiting script'
-        assert max(decs) - min(decs) < 3, 'Declination range greater than 3 degrees. Exiting script'
     except AssertionError as e:
         print('Validation failed.')
         raise ValidationException(e)
