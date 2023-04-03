@@ -10,21 +10,25 @@ class ProcessingException(Exception):
 
 
 def master_flat(app, flat_dir, process_dir):
-    app.Execute('cd ' + flat_dir + '\n'
-                'convert flat -out=' + process_dir + ' -fitseq' + '\n'
-                'cd ' + process_dir  + '\n'
-                'preprocess flat -bias=bias_stacked' + '\n'
-                'stack pp_flat rej 3 3 -norm=mul')
+    app.Execute('cd ' + flat_dir)
+    app.Execute('convert flat -out=' + process_dir)
+    app.Execute('cd ' + process_dir)
+    app.Execute('preprocess flat -bias=bias_stacked -fitseq')
+    app.Execute('stack pp_flat rej 3 3 -norm=mul')
+    os.remove(os.path.join(process_dir, 'pp_flat_.fit'))
     
 
 def light(app, light_dir, process_dir, output_dir, image_type):
     app.Execute('cd ' + light_dir)
-    app.Execute('convert light -out=' + process_dir + ' -fitseq')
+    app.Execute('convert light -out=' + process_dir)
     app.Execute('cd ' + process_dir)
-    app.Execute('preprocess light -dark=dark_stacked -flat=pp_flat_stacked')
+    app.Execute('preprocess light -dark=dark_stacked -flat=pp_flat_stacked -fitseq')
+    os.remove(os.path.join(process_dir, 'pp_flat_stacked.fit'))
     app.Execute('register pp_light')
+    os.remove(os.path.join(process_dir, 'pp_light_.fit'))
+    # app.Execute('register pp_light -drizzle')
     app.Execute('stack r_pp_light rej linear 5 5 -norm=addscale -output_norm -out=' + output_dir + '\\STACKED\\' + image_type)
-    app.Execute('close')
+    os.remove(os.path.join(process_dir, 'r_pp_light_.fit'))
 
     
 def stack_image_type(image_type_dir, output_dir):
@@ -41,6 +45,7 @@ def stack_image_type(image_type_dir, output_dir):
         app.Execute('setext fit')
         master_flat(app, flat_dir, process_dir)
         light(app, light_dir, process_dir, output_dir, image_type)
+        app.Execute('close')
     except Exception as e :
         print('Error occured when stacking images.')
         raise ProcessingException(e)

@@ -32,33 +32,46 @@ def symlink_files(input_dir, sorted_dir):
 
 def verify_lights(lights_dir):
     exposure_times = []
+    gains = []
+    offsets = []
 
     for subdir, _, files in os.walk(lights_dir):
         for file in files:
             if file.endswith('.fits') and 'BAD' not in file:
                 with fits.open(os.path.join(subdir, file)) as fits_file:
                     try:
-                        exposure_time = int(fits_file[0].header['EXPTIME'])
-                        exposure_times.append(exposure_time)
+                        fits_header = fits_file[0].header
+                        exposure_times.append(int(fits_header['EXPTIME']))
+                        gains.append(fits_header['GAIN'])
+                        offsets.append(fits_header['OFFSET'])
                     except KeyError as e:
-                        print('Exposure time, RA or DEC no present in file: ' + os.path.join(subdir, file))
+                        print('Required header not present in file: ' + os.path.join(subdir, file))
+                        print(e.__cause__)
                         raise ValidationException(e)
             else:
                 continue
 
     try:
         assert all(exposure_time == exposure_times[0] for exposure_time in exposure_times), 'Not all exposure times are equal. Exiting script.'
+        assert all(gain == gains[0] for gain in gains), 'Not all exposure times are equal. Exiting script.'
+        assert all(offset == offsets[0] for offset in offsets), 'Not all exposure times are equal. Exiting script.'
     except AssertionError as e:
         print('Validation failed.')
         raise ValidationException(e)
 
-    return exposure_times[0]
+    return fits_header
 
 
-def symlink_master_biases_and_darks(image_type_dir, master_bias_dir, darks_dir, exposure_time):
+def symlink_master_biases_and_darks(resolution, image_type_dir, library_dir, fits_header):
+    exposure_time = (int(fits_header['EXPTIME']))
+    gain = fits_header['GAIN']
+    offset = (fits_header['OFFSET'])
+
+    library_dir = library_dir.replace('[GAIN]', str(gain)).replace('[OFFSET]', str(offset)).replace('[RESOLUTION]', resolution)
+
     process_path = os.path.join(image_type_dir, 'PROCESS')
-    master_bias_path = os.path.join(master_bias_dir, 'bias_stacked.fit')
-    master_dark_path = os.path.join(darks_dir, str(exposure_time) + 'S', 'dark_stacked.fit')
+    master_bias_path = os.path.join(library_dir, 'BIASES', 'bias_stacked.fit')
+    master_dark_path = os.path.join(library_dir, 'DARKS', str(exposure_time) + 'S', 'dark_stacked.fit')
 
     Path(process_path).mkdir(parents=True, exist_ok=True)
 

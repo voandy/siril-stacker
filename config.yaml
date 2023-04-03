@@ -1,6 +1,5 @@
 directories:
-  input_directory: D:\astro\input_sol
-  output_directory: D:\astro\output_sol
-  base: Z:\Astro\Library\QHY294M\47MP\[GAIN]_Gain_[OFFSET]_Offset_-10C
-  biases_directory: Z:\Astro\Library\QHY294M\47MP\2600_Gain_30_Offset_-10C\BIASES
-  darks_directory: Z:\Astro\Library\QHY294M\47MP\2600_Gain_30_Offset_-10C\DARKS
+  input_directory: D:\astro\centaurus
+  output_directory: D:\astro\centaurus_out
+  library: Z:\Photos\Astro\Library\QHY294M\[RESOLUTION]MP\[GAIN]_Gain_[OFFSET]_Offset_-10C
+  
